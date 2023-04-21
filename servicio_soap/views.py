@@ -1,17 +1,24 @@
 from typing import Optional
 
-from spyne import Application, Iterable, ServiceBase, String, rpc
+from spyne import Application, ServiceBase, String, rpc
 from spyne.error import ResourceAlreadyExistsError, ResourceNotFoundError
-from spyne.model.primitive import Integer
+from spyne.model.complex import ComplexModel, Iterable
+from spyne.model.primitive import Integer, Unicode
 from spyne.protocol.soap import Soap11
 
 from books.models import Book as BookModel
+
+from .serializers import Book
 
 
 class MiServicio(ServiceBase):
     @rpc(String, String, _returns=String)
     def metodo1(ctx, parametro1, parametro2):
         return "Hola, " + parametro1 + " y " + parametro2 + "!"
+    
+    @rpc(String, String, _returns=Iterable(Book))
+    def getList(ctx, parametro1, parametro2):
+        return BookModel.objects.all()
 
     @rpc(Integer,_returns=String)
     def getBook(ctx, parametro1):
@@ -23,7 +30,7 @@ class MiServicio(ServiceBase):
         new_book = BookModel(nombre=parametro1, descripcion=parametro2)
         new_book.save()
         return "Libro creado exitosamente!."
-    
+
     @rpc(Integer,_returns=String)
     def deleteBook(ctx, parametro1):
         try:
@@ -46,6 +53,7 @@ class MiServicio(ServiceBase):
         
         return f"El libro con el id {id} ha sido actualizado."
         
+
 
 
 
@@ -88,5 +96,26 @@ app = Application([MiServicio], 'servicio_soap',
 #     <ns0:deleteBook xmlns:ns0="servicio_soap">
 #       <ns0:parametro1>56</ns0:parametro1>
 #     </ns0:deleteBook>
+#   </soap:Body>
+# </soap:Envelope>
+
+# updateBook
+# <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+#   <soap:Body>
+#     <ns0:updateBook xmlns:ns0="servicio_soap">
+#       <ns0:id>2</ns0:id>
+#       <ns0:nombre>Harry Potter y la Piedra filosofal</ns0:nombre>
+#       <ns0:descripcion>Descripcion de Harry Potter y la Piedra filosofal</ns0:descripcion>
+#     </ns0:updateBook>
+#   </soap:Body>
+# </soap:Envelope>
+
+#getList
+# <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+#   <soap:Body>
+#     <ns0:getList xmlns:ns0="servicio_soap">
+#       <ns0:parametro1>valor1</ns0:parametro1>
+#       <ns0:parametro2>valor2</ns0:parametro2>
+#     </ns0:getList>
 #   </soap:Body>
 # </soap:Envelope>
